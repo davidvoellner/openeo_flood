@@ -1,0 +1,341 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Flood Pipeline Data Flow",
+    "viewBox": [
+      1080,
+      730
+    ],
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "flood-extent",
+        "label": "Flood extent path",
+        "focus": [
+          "eodc",
+          "gfm",
+          "flexth"
+        ],
+        "note": "GFM ensemble masks arrive per acquisition and drive depth modelling."
+      },
+      {
+        "id": "terrain",
+        "label": "Terrain and depth",
+        "focus": [
+          "gee",
+          "dem",
+          "flexth"
+        ],
+        "note": "FABDEM is mosaicked once and warped onto the shared FLEXTH grid."
+      },
+      {
+        "id": "exposure",
+        "label": "Exposure products",
+        "focus": [
+          "flexth",
+          "ghsl",
+          "population",
+          "osm"
+        ],
+        "note": "Depth is combined with GHSL built-up classes, WorldPop and OSM lines."
+      }
+    ],
+    "legend": {
+      "entries": {
+        "dashed": {
+          "label": "data pull"
+        },
+        "emphasis": {
+          "label": "processing"
+        },
+        "default": {
+          "label": "data flow"
+        }
+      }
+    }
+  },
+  "stages": [
+    {
+      "label": "Sources"
+    },
+    {
+      "label": "Acquire"
+    },
+    {
+      "label": "Depth model"
+    },
+    {
+      "label": "Exposure"
+    },
+    {
+      "label": "Consume"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "gee",
+      "type": "cloud",
+      "label": "Google Earth Engine",
+      "sublabel": "FABDEM \u00b7 WorldPop \u00b7 GHSL",
+      "stage": 0,
+      "row": 1,
+      "tag": "ee / geemap"
+    },
+    {
+      "id": "eodc",
+      "type": "cloud",
+      "label": "EODC STAC",
+      "sublabel": "GFM ensemble collection",
+      "stage": 0,
+      "row": 3,
+      "tag": "STAC"
+    },
+    {
+      "id": "osmsrc",
+      "type": "external",
+      "label": "OpenStreetMap",
+      "sublabel": "roads and railways",
+      "stage": 0,
+      "row": 4,
+      "tag": "OSMnx"
+    },
+    {
+      "id": "dem",
+      "type": "backend",
+      "label": "dem step",
+      "sublabel": "FABDEM mosaic",
+      "stage": 1,
+      "row": 2,
+      "tag": "rasterio",
+      "yOffset": -32
+    },
+    {
+      "id": "gfm",
+      "type": "backend",
+      "label": "gfm step",
+      "sublabel": "per-scene flood masks",
+      "stage": 1,
+      "row": 3,
+      "tag": "odc.stac"
+    },
+    {
+      "id": "osm",
+      "type": "backend",
+      "label": "osm step",
+      "sublabel": "flooded roads and rails",
+      "stage": 3,
+      "row": 4,
+      "tag": "geopandas",
+      "yOffset": -32
+    },
+    {
+      "id": "flexth",
+      "type": "backend",
+      "label": "flexth step",
+      "sublabel": "water depth per scene",
+      "stage": 2,
+      "row": 2,
+      "tag": "subprocess"
+    },
+    {
+      "id": "population",
+      "type": "backend",
+      "label": "population step",
+      "sublabel": "WorldPop count raster",
+      "stage": 3,
+      "row": 0,
+      "tag": "download"
+    },
+    {
+      "id": "ghsl",
+      "type": "backend",
+      "label": "ghsl step",
+      "sublabel": "built-up damage and EUR",
+      "stage": 3,
+      "row": 1,
+      "tag": "depth-damage",
+      "yOffset": 32
+    },
+    {
+      "id": "dashboard",
+      "type": "frontend",
+      "label": "Streamlit dashboard",
+      "sublabel": "map and metrics pages",
+      "stage": 4,
+      "row": 0,
+      "tag": "app/"
+    },
+    {
+      "id": "outputs",
+      "type": "database",
+      "label": "outputs/",
+      "sublabel": "rasters and vectors",
+      "stage": 4,
+      "row": 2,
+      "tag": "band / scene",
+      "yOffset": 36
+    }
+  ],
+  "flows": [
+    {
+      "id": "gee-to-dem",
+      "from": "gee",
+      "to": "dem",
+      "label": "FABDEM mosaic",
+      "classification": "clipped to AOI",
+      "variant": "dashed"
+    },
+    {
+      "id": "gee-to-population",
+      "from": "gee",
+      "to": "population",
+      "label": "WorldPop count raster",
+      "classification": "annual, AOI clip",
+      "variant": "dashed"
+    },
+    {
+      "id": "gee-to-ghsl",
+      "from": "gee",
+      "to": "ghsl",
+      "label": "GHSL built-up classes",
+      "classification": "settlement grid",
+      "variant": "dashed",
+      "labelAt": [
+        566,
+        296
+      ]
+    },
+    {
+      "id": "eodc-to-gfm",
+      "from": "eodc",
+      "to": "gfm",
+      "label": "STAC items per acquisition",
+      "classification": "ensemble flood extent",
+      "variant": "dashed",
+      "labelAt": [
+        208,
+        542
+      ]
+    },
+    {
+      "id": "osmsrc-to-osm",
+      "from": "osmsrc",
+      "to": "osm",
+      "label": "road and railway graph",
+      "classification": "line features",
+      "variant": "dashed"
+    },
+    {
+      "id": "gfm-to-osm",
+      "from": "gfm",
+      "to": "osm",
+      "label": "flood extent to intersect",
+      "classification": "per scene",
+      "variant": "emphasis",
+      "labelDy": 24,
+      "labelDx": 80
+    },
+    {
+      "id": "gfm-to-flexth",
+      "from": "gfm",
+      "to": "flexth",
+      "label": "flood mask",
+      "classification": "per scene",
+      "variant": "emphasis"
+    },
+    {
+      "id": "dem-to-flexth",
+      "from": "dem",
+      "to": "flexth",
+      "label": "prepared DTM grid",
+      "classification": "shared by scenes",
+      "variant": "emphasis"
+    },
+    {
+      "id": "flexth-to-ghsl",
+      "from": "flexth",
+      "to": "ghsl",
+      "label": "water depth raster",
+      "classification": "metres",
+      "variant": "emphasis"
+    },
+    {
+      "id": "flexth-to-outputs",
+      "from": "flexth",
+      "to": "outputs",
+      "label": "depth per scene",
+      "classification": "GeoTIFF",
+      "variant": "default"
+    },
+    {
+      "id": "population-to-outputs",
+      "from": "population",
+      "to": "outputs",
+      "label": "population raster",
+      "classification": "GeoTIFF",
+      "variant": "default"
+    },
+    {
+      "id": "ghsl-to-outputs",
+      "from": "ghsl",
+      "to": "outputs",
+      "label": "damage class and EUR bands",
+      "classification": "GeoTIFF",
+      "variant": "default",
+      "labelAt": [
+        770,
+        360
+      ]
+    },
+    {
+      "id": "osm-to-outputs",
+      "from": "osm",
+      "to": "outputs",
+      "label": "flooded km summaries",
+      "classification": "GeoJSON + JSON",
+      "variant": "default"
+    },
+    {
+      "id": "outputs-to-dashboard",
+      "from": "outputs",
+      "to": "dashboard",
+      "label": "rasters and vectors",
+      "classification": "read-only",
+      "variant": "default",
+      "labelAt": [
+        960,
+        271
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Order and inputs",
+      "items": [
+        "The runner executes dem, gfm, osm, flexth, population and ghsl in that fixed order",
+        "Every step reads the same AOI vector and config.yaml, so no step draws its own extent",
+        "GFM flood extent plus the FABDEM-derived DTM are the two inputs FLEXTH needs"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Shared versus per-scene data",
+      "items": [
+        "DEM, WorldPop, GHSL and the OSM road/rail layers are each fetched once per AOI and cached on disk",
+        "Flood masks, depth rasters and damage rasters are written per band and scene timestamp",
+        "A whole-time maximum flood extent is written alongside the per-scene masks"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "Where exposure is computed",
+      "items": [
+        "The ghsl step combines depth with built-up classes into damage and EUR bands",
+        "The population step only downloads WorldPop; the Results page derives exposed population from depth",
+        "The dashboard reads what the steps already wrote and never fetches source data itself"
+      ]
+    }
+  ]
+}

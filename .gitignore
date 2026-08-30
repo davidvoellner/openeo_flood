@@ -6,7 +6,7 @@ dist/
 wheels/
 *.egg-info
 .pytest_cache/
-
+assets/old/*
 # Virtual environments
 .venv
 t_kjell
