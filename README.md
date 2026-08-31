@@ -7,6 +7,17 @@ Engine) + **GFM flood extent** (EODC STAC) + **FLEXTH water depth/level**
 The app is driven by a
 single `config.yaml` and a Streamlit dashboard.
 
+The app turns a satellite-derived flood extent into an interpolated water depth
+map and a set of impact numbers for any area of interest — potentially useful
+for natural hazard response as well as for research. It makes the limitations of
+GFM visible, especially in urban areas where the radar-based detection cannot
+evaluate large parts of a city, and it lets you compare the different GFM
+algorithms (DLR, TUW, the ensemble) against each other for the same scene. On
+top of that it estimates the exposure and damage of the modelled flood:
+population, roads and railways, buildings and a rough EUR damage figure. It was
+built for an Advanced Cloud Computing course to explore what different cloud
+workflows (Google Earth Engine, STAC/EODC,pangeo) can do for such a pipeline.
+
 ## Quick start
 
 ```bash
